@@ -5,7 +5,7 @@ border-1px($color)
     position: absolute
     bottom: 0
     left: 0
-    width : 100%
+    width: 100%
     border-top: 1px solid $color
     content: " "
   &:before
@@ -13,6 +13,11 @@ border-1px($color)
     position: absolute
     top: 0
     left: 0
-    width : 100%
+    width: 100%
     border-top: 1px solid $color
     content: " "
+
+bg-img($url)
+  background: url($url + "@2x.png")
+  @media (-webkit-min-device-pixel-ratio: 3), (min-device-pixel-ratio: 3)
+    background: url($url + "@3x.png")
