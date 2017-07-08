@@ -215,7 +215,6 @@
       width: 100%
       height: 100%
       filter: blur(10px)
-
     .detail
       position: fixed
       z-index: 100
@@ -224,7 +223,7 @@
       width: 100%
       height: 100%
       overflow: auto
-      backdrop-filter: 10px // iPhone手机专用
+      backdrop-filter: blur(10px) // iPhone手机专用
       &.fade-transition
         transition: all .3s
         background: rgba(7, 17, 27, 0.8)
