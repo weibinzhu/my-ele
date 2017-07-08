@@ -1,17 +1,18 @@
 <template>
   <div class="goods">
-    <div class="menuWrapper">
+    <div class="menuWrapper" v-el:menu-wrapper>
       <ul>
-        <li v-for="item in goods" class="menuItem ">
+        <li v-for="item in goods" class="menuItem" :class="{'current':currentIndex === $index}"
+            @click="selectMenu($index,$event)">
           <span class="text border-1px">
             <span v-show="item.type>0" class="icon" :class="classMap[item.type]"></span>{{item.name}}
           </span>
         </li>
       </ul>
     </div>
-    <div class="foodsWrapper">
+    <div class="foodsWrapper" v-el:foods-wrapper>
       <ul>
-        <li v-for="item in goods" class="foodList">
+        <li v-for="item in goods" class="foodList foodListHook">
           <h1 class="title">{{item.name}}</h1>
           <ul>
             <li v-for="food in item.foods" class="foodItem border-1px">
@@ -22,12 +23,11 @@
                 <h2 class="name">{{food.name}}</h2>
                 <p class="desc">{{food.description}}</p>
                 <div class="extra">
-                  <span class="count">月售{{food.sellCount}}份</span>
-                  <span>好评率{{food.rating}}%</span>
+                  <span class="count">月售{{food.sellCount}}份</span><span>好评率{{food.rating}}%</span>
                 </div>
                 <div class="price">
-                  <span class="now">￥{{food.price}}</span>
-                  <span class="old" v-show="food.oldPrice">￥{{food.oldPrice}}</span>
+                  <span class="now">￥{{food.price}}</span><span class="old"
+                                                                v-show="food.oldPrice">￥{{food.oldPrice}}</span>
                 </div>
               </div>
             </li>
@@ -39,6 +39,7 @@
 </template>
 
 <script type="text/ecmascript-6">
+  import BScroll from 'better-scroll';
   const ERRNUM = 0;
   export default {
     porps: {
@@ -49,7 +50,9 @@
     data() {
       return {
         goods: [],
-        classMap: []
+        classMap: [],
+        heightList: [],
+        currentHeight: 0
       };
     },
     created() {
@@ -58,9 +61,57 @@
         response = response.body;
         if (response.errno === ERRNUM) {
           this.goods = response.data;
-          console.log(this.goods);
+          this.$nextTick(() => {
+            this._initBetterScroll();
+            this._calculateHeightList();
+          });
         }
       });
+    },
+    computed: {
+      currentIndex() {
+        for (let j = 0; j < this.heightList.length; j++) {
+          let heightTop = this.heightList[j];
+          let heightBottom = this.heightList[j + 1];
+          if (!heightBottom || (this.currentHeight >= heightTop && this.currentHeight < heightBottom)) {
+            return j;
+          }
+        }
+        return 0;
+      }
+    },
+    methods: {
+      _initBetterScroll() {
+        this.menuScroll = new BScroll(this.$els.menuWrapper, {
+          click: true
+        });
+        this.foodsScroll = new BScroll(this.$els.foodsWrapper, {
+          probeType: 3
+        });
+        this.foodsScroll.on('scroll', (pos) => {
+          this.currentHeight = Math.abs(Math.round(pos.y));
+          // console.log(this.currentIndex);
+          // console.log(this.currentHeight);
+        });
+      },
+      _calculateHeightList() {
+        let height = 0;
+        let foodList = this.$els.foodsWrapper.getElementsByClassName('foodListHook');
+        this.heightList.push(height);
+        for (let i = 0; i < foodList.length; i++) {
+          height += foodList[i].clientHeight;
+          this.heightList.push(height);
+        }
+        // console.log(this.heightList);
+      },
+      selectMenu(index, event) {
+        if (!event._constructed) {
+          return;
+        }// 用于防止在pc端出现两次点击，只有better-scroll派发的点击事件有_constructed属性
+        let foodList = this.$els.foodsWrapper.getElementsByClassName('foodListHook');
+        let targetEle = foodList[index];
+        this.foodsScroll.scrollToElement(targetEle, 300);
+      }
     }
   };
 </script>
@@ -83,6 +134,14 @@
         height: 54px
         padding: 0 12px
         display: table
+        &.current
+          position: relative
+          z-index: 10
+          margin-top: -1px
+          background-color: #fff
+          font-weight: 700
+          .text
+            border-none()
         .icon
           display: inline-block
           width: 12px
@@ -115,6 +174,7 @@
           display: table-cell
           vertical-align: middle
           border-1px(rgba(7, 17, 27, 0.1))
+
     .foodsWrapper
       flex: 1
       .foodList
@@ -152,14 +212,14 @@
               margin-bottom: 8px
               font-size: 10px
               line-height: 10px
-              height: 10px
+              height: 12px
               color: rgb(147, 153, 159)
             .extra
               font-size: 10px
-              line-height: 10px
+              line-height: 12px
               height: 10px
               color: rgb(147, 153, 159)
-              &.count
+              .count
                 margin-right: 12px
             .price
               font-weight: 700
