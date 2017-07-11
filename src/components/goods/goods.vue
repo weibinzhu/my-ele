@@ -15,7 +15,7 @@
         <li v-for="item in goods" class="foodList foodListHook">
           <h1 class="title">{{item.name}}</h1>
           <ul>
-            <li v-for="food in item.foods" class="foodItem border-1px">
+            <li @click="selectFood(food,$event)" v-for="food in item.foods" class="foodItem border-1px">
               <div class="icon">
                 <img :src="food.icon" class="iconImg">
               </div>
@@ -29,20 +29,29 @@
                   <span class="now">￥{{food.price}}</span><span class="old"
                                                                 v-show="food.oldPrice">￥{{food.oldPrice}}</span>
                 </div>
+                <div class="cartcontrolWrapper">
+                  <cartcontrol :food="food"></cartcontrol>
+                </div>
               </div>
             </li>
           </ul>
         </li>
       </ul>
     </div>
+    <shopcart :delivery-price="seller.deliveryPrice" :min-price="seller.minPrice"
+              :selected-foods="selectedFoods"></shopcart>
   </div>
+  <food :food="selectedFood" v-ref:food></food>
 </template>
 
 <script type="text/ecmascript-6">
   import BScroll from 'better-scroll';
+  import shopcart from 'components/shopcart/shopcart';
+  import cartcontrol from 'components/cartcontrol/cartcontrol';
+  import food from 'components/food/food';
   const ERRNUM = 0;
   export default {
-    porps: {
+    props: {
       seller: {
         type: Object
       }
@@ -52,7 +61,8 @@
         goods: [],
         classMap: [],
         heightList: [],
-        currentHeight: 0
+        currentHeight: 0,
+        selectedFood: {} // 被要求查看详情页的商品，与selectedFoods不同
       };
     },
     created() {
@@ -78,6 +88,17 @@
           }
         }
         return 0;
+      },
+      selectedFoods() {
+        let foods = [];
+        this.goods.forEach((good) => {
+          good.foods.forEach((food) => {
+            if (food.count) {
+              foods.push(food);
+            }
+          });
+        });
+        return foods;
       }
     },
     methods: {
@@ -86,7 +107,8 @@
           click: true
         });
         this.foodsScroll = new BScroll(this.$els.foodsWrapper, {
-          probeType: 3
+          probeType: 3,
+          click: true
         });
         this.foodsScroll.on('scroll', (pos) => {
           this.currentHeight = Math.abs(Math.round(pos.y));
@@ -111,13 +133,26 @@
         let foodList = this.$els.foodsWrapper.getElementsByClassName('foodListHook');
         let targetEle = foodList[index];
         this.foodsScroll.scrollToElement(targetEle, 300);
+      },
+      selectFood(food, event) {
+        if (!event._constructed) {
+          return;
+        }
+        this.selectedFood = food;
+        this.$refs.food.show();
       }
+    },
+    components: {
+      shopcart,
+      cartcontrol,
+      food
     }
   };
 </script>
 
 <style lang="stylus" rel="stylesheet/stylus">
   @import "../../common/stylus/fun.styl"
+  @import "../../common/stylus/base.styl"
   .goods
     display: flex
     position: absolute
@@ -232,4 +267,8 @@
                 text-decoration: line-through // 『删除横线』样式
                 font-size: 10px
                 color: rgb(147, 153, 159)
+            .cartcontrolWrapper
+              position: absolute
+              right: 0
+              bottom: -4px
 </style>
