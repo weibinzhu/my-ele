@@ -167,7 +167,7 @@
       padding: 18px
       .favorite
         position: absolute
-        width: 50px
+        width: 50px // 给外层定一个宽度，这样在『收藏』文字变动时，图标位置不会变
         top: 20px
         right 36px
         text-align: center
@@ -279,7 +279,7 @@
       .picsWrapper
         width: 100%
         overflow: hidden
-        white-space: nowrap
+        white-space: nowrap // 不会折行
         .picList
           font-size: 0
           .pic
